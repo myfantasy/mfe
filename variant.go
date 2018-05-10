@@ -16,6 +16,7 @@ const (
 	decimalType
 	stringType
 	boolType
+	timeType
 )
 
 // Variant - Тип который будет анонимным для простых типов
