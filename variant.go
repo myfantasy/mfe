@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/shopspring/decimal"
 )
@@ -35,11 +36,84 @@ func VariantNewNull() Variant {
 	return v
 }
 
+//TimeFromString -- Создаёт и парсит дату из строки
+func TimeFromString(s string) Variant {
+
+	s = strings.Replace(s, "Z", "", -1)
+	s = strings.Replace(s, "\"", "", -1)
+
+	lo := ""
+	d := strings.Index(s, ":")
+
+	sd := s[d:]
+
+	ip := strings.Index(sd, "+") + d
+	im := strings.Index(sd, "-") + d
+
+	z := ip
+	if z == -1 {
+		z = im
+	}
+
+	if z != -1 {
+		lo = lo + "Z07:00"
+	}
+
+	i := strings.Index(s, ".")
+	if i != -1 {
+		if z == -1 {
+			z = len(s)
+		}
+		lo = "." + strings.Repeat("9", z-i-1) + lo
+	}
+
+	if d != -1 {
+		d2 := strings.Index(sd[1:], ":")
+		if d2 == 2 {
+			lo = "15:04:05" + lo
+		} else {
+			lo = "15:04" + lo
+		}
+		if strings.Contains(s, "T") {
+			lo = "T" + lo
+		} else {
+			lo = " " + lo
+		}
+	}
+	if d > 2 {
+		if strings.Contains(s, "-") {
+			lo = "2006-01-02" + lo
+		} else {
+			lo = "20060102" + lo
+		}
+	}
+
+	t, err := time.Parse(lo, s)
+
+	if err != nil {
+		panic(err)
+	}
+	return Variant{typeCode: timeType, value: t}
+}
+
+// ToDecimal -- Создаёт VariantDecimal из VariantString
+func (v Variant) ToDecimal() Variant {
+	vr, _ := decimal.NewFromString(strings.Replace(v.String(), "\"", "", -1))
+	return VariantNew(vr)
+}
+
+// ToTime -- Создаёт VariantTime из VariantString
+func (v Variant) ToTime() Variant {
+	return TimeFromString(strings.Replace(v.String(), "\"", "", -1))
+}
+
 // VariantNew новый экземпляр
 func VariantNew(i interface{}) Variant {
 	switch i.(type) {
 	case bool:
 		return Variant{typeCode: boolType, value: i}
+	case time.Time:
+		return Variant{typeCode: timeType, value: i}
 	case VMap:
 		return Variant{typeCode: vmapType, valueVM: i.(VMap)}
 	case SV:
@@ -48,6 +122,8 @@ func VariantNew(i interface{}) Variant {
 		return Variant{typeCode: stringType, value: i}
 	case float32:
 		return Variant{typeCode: decimalType, value: decimal.NewFromFloat(float64(i.(float32)))}
+	case decimal.Decimal:
+		return Variant{typeCode: decimalType, value: i}
 	case float64:
 		return Variant{typeCode: decimalType, value: decimal.NewFromFloat(i.(float64))}
 	case int, int64, int32, int16, int8:
@@ -85,6 +161,11 @@ func (v Variant) IsBool() bool {
 	return v.typeCode == boolType
 }
 
+// IsTime check value is time
+func (v Variant) IsTime() bool {
+	return v.typeCode == timeType
+}
+
 // IsString check value is string
 func (v Variant) IsString() bool {
 	return v.typeCode == stringType
@@ -107,6 +188,14 @@ func (v Variant) Bool() bool {
 	return false
 }
 
+// Time - Get time.Time from Variant
+func (v Variant) Time() time.Time {
+	if v.typeCode == timeType {
+		return v.value.(time.Time)
+	}
+	return time.Time{}
+}
+
 // Str - Get String Value from Variant
 func (v Variant) Str() string {
 	if v.typeCode == stringType {
@@ -125,6 +214,10 @@ func (v Variant) String() string {
 	}
 	if v.typeCode == boolType {
 		return strconv.FormatBool(v.value.(bool))
+	}
+	if v.typeCode == timeType {
+		s, _ := json.Marshal(v.value.(time.Time))
+		return string(s)
 	}
 	if v.typeCode == stringType {
 		s, _ := json.Marshal(v.value.(string))

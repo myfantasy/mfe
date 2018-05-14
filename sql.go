@@ -34,7 +34,14 @@ func Execute(db *sql.DB, query string) (v Variant, e error) {
 				return VariantNewNull(), e
 			}
 			for i := range vals {
-				vm[ct[i].Name()] = VariantNew(*(vals[i].(*interface{})))
+				vv := VariantNew(*(vals[i].(*interface{})))
+				dtn := ct[i].DatabaseTypeName()
+				if dtn == "NUMERIC" {
+					vm[ct[i].Name()] = vv.ToDecimal()
+				} else {
+					vm[ct[i].Name()] = vv
+				}
+
 			}
 
 			svDataRes = append(svDataRes, VariantNew(vm))
