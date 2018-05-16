@@ -109,6 +109,10 @@ func (v Variant) ToTime() Variant {
 
 // VariantNew новый экземпляр
 func VariantNew(i interface{}) Variant {
+	if i == nil {
+		return VariantNewNull()
+	}
+
 	switch i.(type) {
 	case bool:
 		return Variant{typeCode: boolType, value: i}
@@ -207,7 +211,7 @@ func (v Variant) Str() string {
 // String - Get string display Variant
 func (v Variant) String() string {
 	if v.isNull {
-		return "nil"
+		return "null"
 	}
 	if v.typeCode == decimalType {
 		return v.value.(decimal.Decimal).String()
@@ -252,6 +256,13 @@ func (v Variant) String() string {
 		return b.String()
 	}
 	panic("Unknown type or value")
+}
+
+// MarshalJSON is marshal json from Variant
+func (v Variant) MarshalJSON() ([]byte, error) {
+	s := v.String()
+	b := []byte(s)
+	return b, nil
 }
 
 // UnmarshalJSON is unmarchal into Variant

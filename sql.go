@@ -36,7 +36,7 @@ func Execute(db *sql.DB, query string) (v Variant, e error) {
 			for i := range vals {
 				vv := VariantNew(*(vals[i].(*interface{})))
 				dtn := ct[i].DatabaseTypeName()
-				if dtn == "NUMERIC" {
+				if dtn == "NUMERIC" && !vv.IsNull() {
 					vm[ct[i].Name()] = vv.ToDecimal()
 				} else {
 					vm[ct[i].Name()] = vv
