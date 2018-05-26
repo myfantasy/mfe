@@ -1,6 +1,7 @@
 package mfe
 
 import (
+	"fmt"
 	"sort"
 
 	fasthttp "github.com/valyala/fasthttp"
@@ -11,7 +12,14 @@ var rMap map[int]map[string]func(ctx *fasthttp.RequestCtx)
 var lMap map[int]struct{}
 var lS []int
 
+var serverHeader string
+
 var defRoute func(ctx *fasthttp.RequestCtx)
+
+// ServerHeaderSet -- Установить значение в хедер сервер
+func ServerHeaderSet(server string) {
+	serverHeader = server
+}
 
 // AddDirectRoute -- Добавить роут точное имя
 func AddDirectRoute(uri string, f func(ctx *fasthttp.RequestCtx)) {
@@ -62,8 +70,41 @@ func ListenAndServe(listenAddr string, defaultHandler func(ctx *fasthttp.Request
 	AddDefaultRoute(defaultHandler)
 	fasthttp.ListenAndServe(listenAddr, func(ctx *fasthttp.RequestCtx) {
 
+		ctx.Response.Header.SetServer(StringGetNotEmpty(serverHeader, "mfe"))
+
 		f := searchRoute(string(ctx.Path()))
 
 		f(ctx)
 	})
+}
+
+// DisplayInputHandler отображает всё что пришло на вход
+func DisplayInputHandler(ctx *fasthttp.RequestCtx) {
+
+	fmt.Fprintln(ctx, string("path: "))
+	fmt.Fprintln(ctx, string(ctx.Path()))
+	fmt.Fprintln(ctx, "<br>method: ")
+	fmt.Fprintln(ctx, string(ctx.Method()))
+	fmt.Fprintln(ctx, "<br>post args: ")
+	fmt.Fprintln(ctx, ctx.PostArgs())
+	fmt.Fprintln(ctx, "<br>post body: ")
+	fmt.Fprintln(ctx, string(ctx.PostBody()))
+	fmt.Fprintln(ctx, "<br>query args: ")
+
+	ctx.QueryArgs().VisitAll(func(key, value []byte) {
+		fmt.Fprintln(ctx, "<br>")
+		fmt.Fprint(ctx, string(key))
+		fmt.Fprint(ctx, " : ")
+		fmt.Fprintln(ctx, string(value))
+	})
+
+	fmt.Fprintln(ctx, "<br>headrs:")
+	ctx.Request.Header.VisitAll(func(key, value []byte) {
+		fmt.Fprintln(ctx, "<br>")
+		fmt.Fprint(ctx, string(key))
+		fmt.Fprint(ctx, " : ")
+		fmt.Fprintln(ctx, string(value))
+	})
+
+	ctx.Response.Header.SetContentType("text/html;charset=utf-8")
 }
