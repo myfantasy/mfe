@@ -176,6 +176,30 @@ func InputDataGet(ctx *fasthttp.RequestCtx) (id InputData) {
 	return id
 }
 
+// EmptyHandler пустой ответ
+func EmptyHandler(ctx *fasthttp.RequestCtx) {
+
+	ctx.Response.Header.SetContentType("text/html;charset=utf-8")
+}
+
+// VariantHandler выдача variant
+func VariantHandler(ctx *fasthttp.RequestCtx, v Variant, err error, err_msg Variant) {
+	ctx.Response.Header.SetContentType("application/json;charset=utf-8")
+
+	if err != nil {
+		ctx.Response.SetStatusCode(500)
+		return
+	}
+
+	if !err_msg.IsNull() {
+		ctx.Response.SetStatusCode(400)
+		fmt.Fprint(ctx, v)
+		return
+	}
+
+	fmt.Fprint(ctx, v)
+}
+
 // Path Get
 func (id InputData) Path() string {
 	return id.path
@@ -209,4 +233,21 @@ func (id InputData) Headers() map[string]string {
 // JSONData Get
 func (id InputData) JSONData() Variant {
 	return id.json
+}
+
+// ParamGet Get parametr
+func (id InputData) ParamGet(n string) (s string) {
+	if v, isOk := id.json.GetElement(n); isOk {
+		return v.String()
+	}
+
+	if v, isOk := id.post[n]; isOk {
+		return v
+	}
+
+	if v, isOk := id.get[n]; isOk {
+		return v
+	}
+
+	return ""
 }
