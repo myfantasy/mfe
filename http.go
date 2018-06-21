@@ -183,7 +183,7 @@ func EmptyHandler(ctx *fasthttp.RequestCtx) {
 }
 
 // VariantHandler выдача variant
-func VariantHandler(ctx *fasthttp.RequestCtx, v Variant, err error, err_msg Variant) {
+func VariantHandler(ctx *fasthttp.RequestCtx, v Variant, err error, errMsg Variant) {
 	ctx.Response.Header.SetContentType("application/json;charset=utf-8")
 
 	if err != nil {
@@ -191,7 +191,7 @@ func VariantHandler(ctx *fasthttp.RequestCtx, v Variant, err error, err_msg Vari
 		return
 	}
 
-	if !err_msg.IsNull() {
+	if !errMsg.IsNull() {
 		ctx.Response.SetStatusCode(400)
 		fmt.Fprint(ctx, v)
 		return
@@ -250,4 +250,60 @@ func (id InputData) ParamGet(n string) (s string) {
 	}
 
 	return ""
+}
+
+// HTTPCallFull do http request with fasthttp
+func HTTPCallFull(url string, method string, body []byte, headers map[string]string, cookies map[string]string) (statusCode int, bodyBytes []byte, headersOut map[string]string, cookiesOut map[string]string, err error) {
+	req := fasthttp.AcquireRequest()
+	defer fasthttp.ReleaseRequest(req)
+
+	req.SetRequestURI(url)
+	req.Header.SetMethod(method)
+	if body != nil && len(body) > 0 {
+		req.SetBody(body)
+	}
+
+	if headers != nil {
+		for k, v := range headers {
+			if k == "User-Agent" {
+				req.Header.SetUserAgent(v)
+			} else {
+				req.Header.Add(k, v)
+			}
+		}
+
+	}
+
+	if cookies != nil {
+		for k, v := range cookies {
+			req.Header.SetCookie(k, v)
+		}
+	}
+
+	resp := fasthttp.AcquireResponse()
+	defer fasthttp.ReleaseResponse(resp)
+
+	client := &fasthttp.Client{}
+	err = client.Do(req, resp)
+	if err != nil {
+		return
+	}
+
+	bodyBytes = resp.Body()
+
+	statusCode = resp.Header.StatusCode()
+
+	headersOut = map[string]string{}
+
+	resp.Header.VisitAll(func(key, value []byte) {
+		headersOut[string(key)] = string(value)
+	})
+
+	cookiesOut = map[string]string{}
+
+	resp.Header.VisitAllCookie(func(key, value []byte) {
+		cookiesOut[string(key)] = string(value)
+	})
+
+	return
 }
