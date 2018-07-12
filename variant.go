@@ -107,6 +107,16 @@ func (v Variant) ToTime() Variant {
 	return TimeFromString(strings.Replace(v.String(), "\"", "", -1))
 }
 
+// IsSimpleValue -- простой тип (не список)
+func (v Variant) IsSimpleValue() bool {
+	return InI(v.typeCode, decimalType, stringType, boolType, timeType)
+}
+
+// Value -- return value as Interface
+func (v Variant) Value() interface{} {
+	return v.Value
+}
+
 // VariantNew новый экземпляр
 func VariantNew(i interface{}) Variant {
 	if i == nil {
@@ -206,6 +216,14 @@ func (v Variant) Str() string {
 		return v.value.(string)
 	}
 	return ""
+}
+
+// SV - Get slive of Variant
+func (v Variant) SV() (sv SV) {
+	if v.typeCode == listOfVariant {
+		return v.valueSV
+	}
+	return nil
 }
 
 // String - Get string display Variant
@@ -390,4 +408,45 @@ func (v Variant) GetElement(name ...string) (vo Variant, isOk bool) {
 	vo, isOk = v.valueVM[name[0]].GetElement(name[1:len(name)]...)
 	return
 
+}
+
+// GE try get element (GetElement and ignor error)
+func (v Variant) GE(name ...string) (vo Variant) {
+	vo, _ = v.GetElement(name...)
+	return
+}
+
+// GSL get slice len
+func (v Variant) GSL() (l int) {
+	if v.IsNull() {
+		return 0
+	}
+
+	if v.IsSV() {
+		sv := v.SV()
+		if sv == nil {
+			return 0
+		}
+
+		return len(sv)
+	}
+	return 0
+
+}
+
+// GI try get item
+func (v Variant) GI(i int) (vo Variant) {
+	if v.IsNull() {
+		return VariantNewNull()
+	}
+
+	if v.IsSV() {
+		sv := v.SV()
+		if sv == nil || len(sv) <= i {
+			return VariantNewNull()
+		}
+
+		return sv[i]
+	}
+	return VariantNewNull()
 }
