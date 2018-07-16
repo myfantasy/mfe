@@ -218,7 +218,15 @@ func (v Variant) Str() string {
 	return ""
 }
 
-// SV - Get slive of Variant
+// VMap - Get slice of Variant
+func (v Variant) VMap() (vm VMap) {
+	if v.typeCode == listOfVariant {
+		return v.valueVM
+	}
+	return nil
+}
+
+// SV - Get slice of Variant
 func (v Variant) SV() (sv SV) {
 	if v.typeCode == listOfVariant {
 		return v.valueSV
