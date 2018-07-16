@@ -150,6 +150,14 @@ func VariantNew(i interface{}) Variant {
 	return Variant{typeCode: stringType, value: fmt.Sprintf("%v", i)}
 }
 
+// VariantNewFromJSON create new variant from json
+func VariantNewFromJSON(s string) (v Variant, e error) {
+	v = Variant{}
+	e = (&v).UnmarshalJSON([]byte(s))
+
+	return v, e
+}
+
 // IsNull check value is null value
 func (v Variant) IsNull() bool {
 	return v.isNull
