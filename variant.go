@@ -55,7 +55,7 @@ func TimeFromString(s string) Variant {
 		z = im
 	}
 
-	if z != -1 {
+	if z > d {
 		lo = lo + "Z07:00"
 	}
 
