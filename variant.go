@@ -150,6 +150,16 @@ func VariantNew(i interface{}) Variant {
 	return Variant{typeCode: stringType, value: fmt.Sprintf("%v", i)}
 }
 
+// VariantNewSV new item variant (SV type)
+func VariantNewSV() Variant {
+	return Variant{typeCode: listOfVariant, valueSV: make([]Variant, 0)}
+}
+
+// VariantNewVM new item variant (VMap type)
+func VariantNewVM() Variant {
+	return Variant{typeCode: vmapType, valueVM: VMap{}}
+}
+
 // VariantNewFromJSON create new variant from json
 func VariantNewFromJSON(s string) (v Variant, e error) {
 	v = Variant{}
@@ -407,33 +417,43 @@ func (v *Variant) UnmarshalJSON(b []byte) error {
 }
 
 // GetElement is getting element from Variant.VMap by iererchy
-func (v Variant) GetElement(name ...string) (vo Variant, isOk bool) {
+func (v *Variant) GetElement(name ...string) (vo *Variant, isOk bool) {
 	if len(name) == 0 {
 		vo, isOk = v, true
 		return
 	}
 	if len(name) >= 0 && !v.IsVM() {
-		vo, isOk = Variant{isNull: true}, false
+		vr := VariantNewNull()
+		vo, isOk = &vr, false
 		return
 	}
 	if len(name) == 1 {
-		vo, isOk = v.valueVM[name[0]]
+		ve, ok := v.valueVM[name[0]]
+		if ok {
+			return &ve, ok
+		}
+		vr := VariantNewNull()
+		vo, isOk = &vr, false
 		return
 	}
 
-	vo, isOk = v.valueVM[name[0]].GetElement(name[1:len(name)]...)
+	ve, ok := v.valueVM[name[0]]
+	if ok {
+		return (&ve).GetElement(name[1:len(name)]...)
+	}
+	vr := VariantNewNull()
+	vo, isOk = &vr, false
 	return
-
 }
 
 // GE try get element (GetElement and ignor error)
-func (v Variant) GE(name ...string) (vo Variant) {
+func (v *Variant) GE(name ...string) (vo *Variant) {
 	vo, _ = v.GetElement(name...)
 	return
 }
 
-// GSL get slice len
-func (v Variant) GSL() (l int) {
+// Count return count of element in Variant if it is SV else 0
+func (v *Variant) Count() (c int) {
 	if v.IsNull() {
 		return 0
 	}
@@ -451,18 +471,72 @@ func (v Variant) GSL() (l int) {
 }
 
 // GI try get item
-func (v Variant) GI(i int) (vo Variant) {
+func (v *Variant) GI(i int) (vo *Variant) {
 	if v.IsNull() {
-		return VariantNewNull()
+		vr := VariantNewNull()
+		return &vr
 	}
 
 	if v.IsSV() {
 		sv := v.SV()
 		if sv == nil || len(sv) <= i {
-			return VariantNewNull()
+			vr := VariantNewNull()
+			return &vr
 		}
 
-		return sv[i]
+		return &sv[i]
 	}
-	return VariantNewNull()
+	vr := VariantNewNull()
+	return &vr
+}
+
+// AddOrUpdate Add or Update element in Variant
+func (v *Variant) AddOrUpdate(vi *Variant, name ...string) (ok bool) {
+	if len(name) >= 1 {
+		if v.IsNull() || !v.IsVM() {
+			v.typeCode = vmapType
+			v.isNull = false
+			v.valueVM = VMap{}
+		}
+	}
+	if len(name) > 1 {
+		vp, r := v.valueVM[name[0]]
+		if !r {
+			vp = VariantNewVM()
+			v.valueVM[name[0]] = vp
+		}
+		return (&vp).AddOrUpdate(vi, name[1:len(name)]...)
+	}
+	if len(name) == 1 {
+		v.valueVM[name[0]] = *vi
+		return true
+	}
+	return false
+}
+
+// AddIfNotExists Add element in Variant if not exists
+func (v *Variant) AddIfNotExists(vi *Variant, name ...string) (ok bool) {
+	if len(name) >= 1 {
+		if v.IsNull() || !v.IsVM() {
+			v.typeCode = vmapType
+			v.isNull = false
+			v.valueVM = VMap{}
+		}
+	}
+	if len(name) > 1 {
+		vp, r := v.valueVM[name[0]]
+		if !r {
+			vp = VariantNewVM()
+			v.valueVM[name[0]] = vp
+		}
+		return (&vp).AddOrUpdate(vi, name[1:len(name)]...)
+	}
+	if len(name) == 1 {
+		_, r := v.valueVM[name[0]]
+		if !r {
+			v.valueVM[name[0]] = *vi
+			return true
+		}
+	}
+	return false
 }
