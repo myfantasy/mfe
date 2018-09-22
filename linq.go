@@ -2,7 +2,7 @@ package mfe
 
 import "reflect"
 
-// InS Значения в списке (string)
+// InS value in slise (string)
 func InS(b string, s ...string) bool {
 
 	for i := 0; i < len(s); i++ {
@@ -13,7 +13,7 @@ func InS(b string, s ...string) bool {
 	return false
 }
 
-// InI Значения в списке (int)
+// InI value in slise (int)
 func InI(b int, s ...int) bool {
 
 	for i := 0; i < len(s); i++ {
@@ -24,7 +24,7 @@ func InI(b int, s ...int) bool {
 	return false
 }
 
-// In Значения в списке (любые типы)
+// In value in slise (любые типы)
 func In(a interface{}, b ...interface{}) bool {
 	for _, c := range b {
 		if reflect.DeepEqual(a, c) {
@@ -34,7 +34,7 @@ func In(a interface{}, b ...interface{}) bool {
 	return false
 }
 
-// IifS Если истина первое значение иначе второе
+// IifS return first valur if condition true (the ternary operator)
 func IifS(b bool, s1 string, s2 string) string {
 	for b {
 		return s1
@@ -42,7 +42,7 @@ func IifS(b bool, s1 string, s2 string) string {
 	return s2
 }
 
-// IifV Если истина первое значение иначе второе
+// IifV return first valur if condition true (the ternary operator
 func IifV(b bool, s1 Variant, s2 Variant) Variant {
 	for b {
 		return s1
@@ -50,7 +50,7 @@ func IifV(b bool, s1 Variant, s2 Variant) Variant {
 	return s2
 }
 
-// Iif Если истина первое значение иначе второе
+// Iif return first valur if condition true (the ternary operator
 func Iif(b bool, s1 interface{}, s2 interface{}) interface{} {
 	for b {
 		return s1

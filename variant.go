@@ -20,7 +20,7 @@ const (
 	timeType
 )
 
-// Variant - Тип который будет анонимным для простых типов
+// Variant - Is a simple type for parse json or get data from database
 type Variant struct {
 	typeCode int
 	isNull   bool
@@ -36,7 +36,7 @@ func VariantNewNull() Variant {
 	return v
 }
 
-//TimeFromString -- Создаёт и парсит дату из строки
+//TimeFromString create new VariantDate from string
 func TimeFromString(s string) Variant {
 
 	s = strings.Replace(s, "Z", "", -1)
@@ -96,28 +96,28 @@ func TimeFromString(s string) Variant {
 	return Variant{typeCode: timeType, value: t}
 }
 
-// ToDecimal -- Создаёт VariantDecimal из VariantString
+// ToDecimal create VariantDecimal from VariantString
 func (v Variant) ToDecimal() Variant {
 	vr, _ := decimal.NewFromString(strings.Replace(v.String(), "\"", "", -1))
 	return VariantNew(vr)
 }
 
-// ToTime -- Создаёт VariantTime из VariantString
+// ToTime create VariantTime from VariantString
 func (v Variant) ToTime() Variant {
 	return TimeFromString(strings.Replace(v.String(), "\"", "", -1))
 }
 
-// IsSimpleValue -- простой тип (не список)
+// IsSimpleValue return true if type is not Slise or VMap
 func (v Variant) IsSimpleValue() bool {
 	return InI(v.typeCode, decimalType, stringType, boolType, timeType)
 }
 
-// Value -- return value as Interface
+// Value return value as Interface
 func (v Variant) Value() interface{} {
 	return v.Value
 }
 
-// VariantNew новый экземпляр
+// VariantNew create new instance from interface{}
 func VariantNew(i interface{}) Variant {
 	if i == nil {
 		return VariantNewNull()
