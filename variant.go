@@ -238,7 +238,7 @@ func (v Variant) Str() string {
 
 // VMap - Get slice of Variant
 func (v Variant) VMap() (vm VMap) {
-	if v.typeCode == listOfVariant {
+	if v.typeCode == vmapType {
 		return v.valueVM
 	}
 	return nil
@@ -250,6 +250,22 @@ func (v Variant) SV() (sv SV) {
 		return v.valueSV
 	}
 	return nil
+}
+
+// Interface - Get interface from Variant
+func (v Variant) Interface() (i interface{}) {
+	if v.IsNull() {
+		return nil
+	}
+	if v.typeCode == listOfVariant {
+		return v.valueSV
+	}
+	if v.typeCode == vmapType {
+		return v.valueVM
+	}
+
+	return v.value
+
 }
 
 // String - Get string display Variant
@@ -490,6 +506,17 @@ func (v *Variant) GI(i int) (vo *Variant) {
 	return &vr
 }
 
+// Add Add in Variant
+func (v *Variant) Add(vi *Variant) (ok bool) {
+	if v.IsSV() {
+		v.valueSV = append(v.valueSV, *vi)
+		v.isNull = false
+		return true
+	}
+
+	return false
+}
+
 // AddOrUpdate Add or Update element in Variant
 func (v *Variant) AddOrUpdate(vi *Variant, name ...string) (ok bool) {
 	if len(name) >= 1 {
@@ -539,4 +566,60 @@ func (v *Variant) AddIfNotExists(vi *Variant, name ...string) (ok bool) {
 		}
 	}
 	return false
+}
+
+// Foreach - do f for each item in Variant if it is Slise ("" name) of Variant or Map (-1 index) of variant or do on it self if it is not (Slice or Map)
+func (v *Variant) Foreach(f func(v *Variant, name string, index int)) {
+	if v.IsSV() {
+		if !v.IsNull() {
+			for i, vl := range v.SV() {
+				f(&vl, "", i)
+			}
+		}
+		return
+	}
+	if v.IsVM() {
+		if !v.IsNull() {
+			for n, vl := range v.VMap() {
+				f(&vl, n, -1)
+			}
+		}
+		return
+	}
+	f(v, "", -1)
+}
+
+// Keys - for Map of Variant
+func (v *Variant) Keys() (ks []string) {
+	if v.IsVM() {
+		if !v.IsNull() {
+			for n := range v.VMap() {
+				ks = append(ks, n)
+			}
+		}
+	}
+
+	return ks
+}
+
+// SplitBy Split Slise Varioant to Slise of []Variant
+func (v *Variant) SplitBy(i int) (sv []Variant) {
+	if v.IsSV() {
+		if !v.IsNull() {
+			b := i
+			csv := VariantNewSV()
+			for k, vi := range v.SV() {
+				if b < k {
+					b = b + i
+					sv = append(sv, csv)
+					csv = VariantNewSV()
+				}
+				csv.Add(&vi)
+			}
+			if csv.Count() > 0 {
+				sv = append(sv, csv)
+			}
+		}
+	}
+	return sv
 }

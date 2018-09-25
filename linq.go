@@ -57,3 +57,14 @@ func Iif(b bool, s1 interface{}, s2 interface{}) interface{} {
 	}
 	return s2
 }
+
+// JoinS - Join Strings with separator
+func JoinS(separator string, vals ...string) (res string) {
+	for i, s := range vals {
+		if i > 0 {
+			res += separator
+		}
+		res += s
+	}
+	return res
+}
