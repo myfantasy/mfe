@@ -24,6 +24,28 @@ func InI(b int, s ...int) bool {
 	return false
 }
 
+// CoalesceS returns first not "" value
+func CoalesceS(s ...string) string {
+
+	for i := 0; i < len(s); i++ {
+		if s[i] != "" {
+			return s[i]
+		}
+	}
+	return ""
+}
+
+// CoalesceI returns first not 0 value
+func CoalesceI(s ...int) int {
+
+	for i := 0; i < len(s); i++ {
+		if s[i] != 0 {
+			return s[i]
+		}
+	}
+	return 0
+}
+
 // In value in slise (любые типы)
 func In(a interface{}, b ...interface{}) bool {
 	for _, c := range b {

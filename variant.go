@@ -623,3 +623,72 @@ func (v *Variant) SplitBy(i int) (sv []Variant) {
 	}
 	return sv
 }
+
+// ConvertToTypeOrNil Convert Variant to type and return it (string, int, int64, float64, bool, time)
+func (v Variant) ConvertToTypeOrNil(t string) (r interface{}) {
+	if v.IsNull() {
+		return nil
+	}
+
+	if t == "string" {
+		if v.IsString() {
+			return v.Str()
+		}
+		return v.String()
+	}
+	if t == "int" {
+		if v.IsBool() {
+			if v.Bool() {
+				return 1
+			}
+			return 0
+		}
+		if v.IsDecimal() {
+			t := v.Dec().IntPart()
+			return int(t)
+		}
+		return nil
+	}
+	if t == "int64" {
+		if v.IsBool() {
+			if v.Bool() {
+				return 1
+			}
+			return 0
+		}
+		if v.IsDecimal() {
+			return v.Dec().IntPart()
+		}
+		return nil
+	}
+	if t == "float64" {
+		if v.IsBool() {
+			if v.Bool() {
+				return 1
+			}
+			return 0
+		}
+		if v.IsDecimal() {
+			t, _ := v.Dec().Float64()
+			return t
+		}
+		return nil
+	}
+	if t == "bool" {
+		if v.IsBool() {
+			return v.Bool()
+		}
+		if v.IsDecimal() {
+			return v.Dec().IntPart() > 0
+		}
+		return nil
+	}
+	if t == "time" {
+		if v.IsTime() {
+			return v.Time()
+		}
+		return nil
+	}
+
+	return nil
+}
