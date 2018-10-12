@@ -212,6 +212,16 @@ func (v Variant) Dec() decimal.Decimal {
 	return d
 }
 
+// Int64 - Get Decimal (decimal.Decimal) from Variant v.Dec().IntPart()
+func (v Variant) Int64() int64 {
+	return v.Dec().IntPart()
+}
+
+// Int - Get Decimal (decimal.Decimal) from Variant int(v.Dec().IntPart())
+func (v Variant) Int() int {
+	return int(v.Dec().IntPart())
+}
+
 // Bool - Get bool from Variant
 func (v Variant) Bool() bool {
 	if v.typeCode == decimalType {
@@ -510,6 +520,20 @@ func (v *Variant) GI(i int) (vo *Variant) {
 func (v *Variant) Add(vi *Variant) (ok bool) {
 	if v.IsSV() {
 		v.valueSV = append(v.valueSV, *vi)
+		v.isNull = false
+		return true
+	}
+
+	return false
+}
+
+// AddRange Add Vartiant from SV in Variant
+func (v *Variant) AddRange(vi *Variant) (ok bool) {
+	if v.IsSV() {
+		vi.Foreach(func(vs *Variant, name string, index int) {
+			v.valueSV = append(v.valueSV, *vs)
+		})
+
 		v.isNull = false
 		return true
 	}
