@@ -160,6 +160,18 @@ func VariantNewVM() Variant {
 	return Variant{typeCode: vmapType, valueVM: VMap{}}
 }
 
+// VariantNewVMFill new item variant (VMap type) and fill it
+func VariantNewVMFill(vals ...interface{}) Variant {
+	v := VariantNewVM()
+
+	for i := 0; i < len(vals); i = i + 2 {
+		vi := VariantNew(vals[i+1])
+		v.AddOrUpdate(&vi, vals[i].(string))
+	}
+
+	return v
+}
+
 // VariantNewFromJSON create new variant from json
 func VariantNewFromJSON(s string) (v Variant, e error) {
 	v = Variant{}
@@ -539,6 +551,12 @@ func (v *Variant) AddRange(vi *Variant) (ok bool) {
 	}
 
 	return false
+}
+
+// AddOrUpdateI Add or Update element in Variant
+func (v *Variant) AddOrUpdateI(i interface{}, name ...string) (ok bool) {
+	vn := VariantNew(i)
+	return v.AddOrUpdate(&vn, name[0:len(name)]...)
 }
 
 // AddOrUpdate Add or Update element in Variant
