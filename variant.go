@@ -172,6 +172,14 @@ func VariantNewVMFill(vals ...interface{}) Variant {
 	return v
 }
 
+// VariantNewFromJSONBA create new variant from json
+func VariantNewFromJSONBA(s []byte) (v Variant, e error) {
+	v = Variant{}
+	e = (&v).UnmarshalJSON(s)
+
+	return v, e
+}
+
 // VariantNewFromJSON create new variant from json
 func VariantNewFromJSON(s string) (v Variant, e error) {
 	v = Variant{}
@@ -490,6 +498,12 @@ func (v *Variant) GE(name ...string) (vo *Variant) {
 	return
 }
 
+// EE exists element
+func (v *Variant) EE(name ...string) (isOk bool) {
+	_, isOk = v.GetElement(name...)
+	return
+}
+
 // Count return count of element in Variant if it is SV else 0
 func (v *Variant) Count() (c int) {
 	if v.IsNull() {
@@ -598,12 +612,36 @@ func (v *Variant) AddIfNotExists(vi *Variant, name ...string) (ok bool) {
 			vp = VariantNewVM()
 			v.valueVM[name[0]] = vp
 		}
-		return (&vp).AddOrUpdate(vi, name[1:len(name)]...)
+		return (&vp).AddIfNotExists(vi, name[1:len(name)]...)
 	}
 	if len(name) == 1 {
 		_, r := v.valueVM[name[0]]
 		if !r {
 			v.valueVM[name[0]] = *vi
+			return true
+		}
+	}
+	return false
+}
+
+// DeleteElement delete element in Variant if exists
+func (v *Variant) DeleteElement(name ...string) (ok bool) {
+	if len(name) >= 1 {
+		if v.IsNull() || !v.IsVM() {
+			return false
+		}
+	}
+	if len(name) > 1 {
+		vp, r := v.valueVM[name[0]]
+		if !r {
+			return false
+		}
+		return (&vp).DeleteElement(name[1:len(name)]...)
+	}
+	if len(name) == 1 {
+		_, r := v.valueVM[name[0]]
+		if r {
+			delete(v.valueVM, name[0])
 			return true
 		}
 	}

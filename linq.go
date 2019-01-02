@@ -1,6 +1,9 @@
 package mfe
 
-import "reflect"
+import (
+	"reflect"
+	"time"
+)
 
 // InS value in slise (string)
 func InS(b string, s ...string) bool {
@@ -37,6 +40,17 @@ func CoalesceS(s ...string) string {
 
 // CoalesceI returns first not 0 value
 func CoalesceI(s ...int) int {
+
+	for i := 0; i < len(s); i++ {
+		if s[i] != 0 {
+			return s[i]
+		}
+	}
+	return 0
+}
+
+// CoalesceD returns first not 0 value
+func CoalesceD(s ...time.Duration) time.Duration {
 
 	for i := 0; i < len(s); i++ {
 		if s[i] != 0 {
